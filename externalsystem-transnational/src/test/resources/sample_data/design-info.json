@@ -1,0 +1,10 @@
+{
+  "sampleData": {
+    "cae9f6e1-dc3c-4e27-9e18-7e6811821c57": {
+      "vars-soapOut": "sample_data/defaultstringtype.dwl"
+    },
+    "a17af35d-43c7-4dd9-9f62-7a261e91e246": {
+      "payload": "sample_data/java.dwl"
+    }
+  }
+}

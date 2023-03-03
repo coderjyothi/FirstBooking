@@ -1,0 +1,15 @@
+http: 
+  listner:
+   host: "localhost"
+   port: "9082"
+   path: "/firstCoach/{serviceType}"
+  
+  request:
+   route:
+    host: "localhost"
+    port: "7788"
+    path: "/fetchRoutes"
+   schedule:
+    host: "localhost"
+    port: "7789"
+    path: "/fetchSchedules"

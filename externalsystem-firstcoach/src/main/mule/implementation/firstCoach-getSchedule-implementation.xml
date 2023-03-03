@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:request-config name="HTTP_Request_configuration1" doc:name="HTTP Request configuration" doc:id="5e793df8-1205-496c-8735-f51b5947c266" responseTimeout="60000">
+		<http:request-connection host="localhost" port="7789" />
+	</http:request-config>
+	<http:listener-config name="HTTP_Listener_config2" doc:name="HTTP Listener config" doc:id="e3ffc70d-2a69-4457-a585-53e3c567b590" >
+		<http:listener-connection host="localhost" port="7789" />
+	</http:listener-config>
+	<flow name="firstCoach-getSchedule-implementationFlow" doc:id="48e72de6-210d-406e-b9f6-7de87b6f7356" >
+		<logger level="INFO" doc:name="Logger" doc:id="ac01833a-0b3f-406b-ad0f-5583772cacc0" message="Request received first coach externalsystem schedule flow"/>
+		<ee:transform doc:name="Transform Message" doc:id="68520f16-9f0c-44bb-8057-213648ab530d" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{ 
+        "originLocation": { 
+            "locationCode": "BEN-SG" 
+        }, 
+        "destinationLocation": { 
+            "locationCode": "KLG-MY" 
+        } 
+    }]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<http:request method="POST" doc:name="Request" doc:id="ed80d912-6dd4-44ff-b4b9-61314cdfca8a" config-ref="HTTP_Request_configuration1" path="/fetchSchedules"/>
+	</flow>
+	<flow name="firstCoach-getSchedule-implementationFlow1" doc:id="8e3aabe2-357c-4464-b8d6-b983e79b7409" >
+		<http:listener doc:name="Listener" doc:id="11beacbd-1a98-452b-a632-c329dbc339ea" config-ref="HTTP_Listener_config2" path="/fetchSchedules" allowedMethods="POST"/>
+		<ee:transform doc:name="Transform Message" doc:id="fed37e2e-65c5-41a4-8966-dff7ba6fd829" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+ 
+{ 
+    "schedules": [ 
+ 
+        { 
+            "departureDateTime": "2019-04-30T16:41:41.090Z", 
+            "fromLocation": "BEN-SG", 
+            "toLocation": "KLG-MY", 
+            "availableSeats" : 50 
+        }, 
+        { 
+            "departureDateTime": "2019-04-30T18:41:41.090Z", 
+            "fromLocation": "BEN-SG", 
+            "toLocation": "KLG-MY", 
+            "availableSeats" : 10 
+        } 
+    ] 
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>

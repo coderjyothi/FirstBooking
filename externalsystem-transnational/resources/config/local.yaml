@@ -1,0 +1,5 @@
+http:
+ listner:
+  host: "localhost"
+  port: "9081"
+  path: "/Bookings/BookingsSOAP"

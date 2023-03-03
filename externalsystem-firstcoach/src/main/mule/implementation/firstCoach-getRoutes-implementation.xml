@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="7b4d874a-d853-4223-b0f4-399549668720" responseTimeout="60000">
+		<http:request-connection host="localhost" port="7788" />
+	</http:request-config>
+	<http:listener-config name="HTTP_Listener_config1" doc:name="HTTP Listener config" doc:id="fe41ca78-236e-4914-a1fa-34b0205e2e5b" >
+		<http:listener-connection host="localhost" port="7788" />
+	</http:listener-config>
+	<flow name="firstCoach-getRoutes-implementationFlow" doc:id="aeaf1aee-c555-4272-bd62-0f5803cd8f56" >
+		<logger level="INFO" doc:name="Logger" doc:id="cb2d88ac-9138-4ffa-a0e5-4f69a19fbb82" message="Request received first coach routes externalsystem flow"/>
+		<http:request method="GET" doc:name="Request" doc:id="7f344654-3724-49c1-9064-13ab2a7bd908" config-ref="HTTP_Request_configuration" path="/fetchRoutes"/>
+	</flow>
+	<flow name="firstCoach-getRoutes-implementationFlow1" doc:id="b1a65154-b050-4479-905b-31bb22a5e352" >
+		<http:listener doc:name="Listener" doc:id="051ecc65-6f11-442c-ad48-614c064db52f" config-ref="HTTP_Listener_config1" path="/fetchRoutes"/>
+		<ee:transform doc:name="Transform Message" doc:id="4cf2ab22-b84f-45d8-a05d-8d451bd409b3">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+[ 
+    { 
+        "departureLocationCode": "BEN-SG", 
+        "arrivalLocationCode": "KLG-MY" 
+    }, 
+    { 
+        "departureLocationCode": "BEN-SG", 
+        "arrivalLocationCode": "BU-MY" 
+    }, 
+    { 
+        "departureLocationCode": "BEN-SG", 
+        "arrivalLocationCode": "TAR-MY" 
+    } 
+] 
+ ]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>

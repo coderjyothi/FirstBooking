@@ -1,0 +1,4 @@
+%dw 2.0
+
+type auto_48e72de6_210d_406e_b9f6_7de87b6f7356_Input_Variables_companyType = String | Null
+

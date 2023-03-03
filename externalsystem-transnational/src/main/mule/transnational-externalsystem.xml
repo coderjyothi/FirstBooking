@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<mule xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit-soap="http://www.mulesoft.org/schema/mule/apikit-soap" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/apikit-soap http://www.mulesoft.org/schema/mule/apikit-soap/current/mule-apikit-soap.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+    <http:listener-config name="api-httpListenerConfig">
+        <http:listener-connection host="localhost" port="9081"/>
+    </http:listener-config>
+    <apikit-soap:config name="soapkit-config" port="BookingsSOAP" service="Bookings" wsdlLocation="transNational.wsdl"/>
+	<flow name="api-main">
+        <http:listener config-ref="api-httpListenerConfig" path="/Bookings/BookingsSOAP">
+            <http:response statusCode="#[attributes.additionalTransportData.statusCode default 200]">
+                <http:headers><![CDATA[#[attributes.protocolHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[attributes.additionalTransportData.statusCode default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[attributes.protocolHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <logger level="INFO" doc:name="payload from p-api" doc:id="3288e72f-97bf-451e-8b56-5d6bdba6c47d" message="payload from process api #[payload]"/>
+		<apikit-soap:router config-ref="soapkit-config">
+            <apikit-soap:attributes><![CDATA[#[%dw 2.0
+              output application/java
+              ---
+              {
+                  headers: attributes.headers,
+                  method: attributes.method,
+                  queryString: attributes.queryString
+            }]]]></apikit-soap:attributes>
+        </apikit-soap:router>
+    </flow>
+    <flow name="getRoutes:\soapkit-config">
+        <set-variable value="#['&lt;soapenv:Envelope xmlns:soapenv=&quot;http://schemas.xmlsoap.org/soap/envelope/&quot; &#10;xmlns:book=&quot;http://www.example.org/Bookings/&quot;&gt; &#10;   &lt;soapenv:Header/&gt; &#10;   &lt;soapenv:Body&gt; &#10;      &lt;book:getRoutesResponse&gt; &#10;         &lt;out&gt;&#10;&lt;ROUTELIST&gt; &#10; &lt;ROUTEINFO&gt; &#10;  &lt;ORIGIN&gt;MY-KUL&lt;/ORIGIN&gt; &#10;  &lt;ORIGINDESC&gt;KUALA LAMPUR TO MALAYSIA&lt;/ORIGINDESC&gt;&#10;  &lt;DESTINATION&gt;SG-BEU&lt;/DESTINATION&gt;&#10;  &lt;DESTDESC&gt;Beauna Vista Singapore&lt;/DESTDESC&gt;&#10; &lt;/ROUTEINFO&gt; &#10; &lt;/ROUTELIST&gt;&#10; &lt;/out&gt; &#10;      &lt;/book:getRoutesResponse&gt; &#10;   &lt;/soapenv:Body&gt; &#10;&lt;/soapenv:Envelope&gt;']" doc:name="Set Variable" doc:id="0e8d7a11-6b95-4a7e-88e7-b56ac7225156" variableName="soapOut"/>
+		<ee:transform doc:name="Transform Message" doc:id="2388fd56-46b6-4c52-8280-0a13b436900e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+---
+read( vars.soapOut, 'application/xml')]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="log output payload" doc:id="98c75058-7f57-4c22-8763-ca7be2cd4301" message="#[payload]"/>
+    </flow>
+</mule>

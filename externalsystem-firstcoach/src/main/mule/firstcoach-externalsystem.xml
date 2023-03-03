@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="b21cebb5-cf9d-40f5-9ada-5654799f5189" >
+		<http:listener-connection host="${http.listner.host}" port="${http.listner.port}" />
+	</http:listener-config>
+	<configuration-properties doc:name="Configuration properties" doc:id="3f0bd76f-2558-409d-acd8-3521dba833b4" file="config/local.yaml" />
+	<flow name="firstcoach-externalsystemFlow" doc:id="a7e2daeb-b249-4e59-b48d-c295ba24c3ee" >
+		<http:listener doc:name="Listener" doc:id="ab88baab-7213-4472-8d75-e62b309a8848" config-ref="HTTP_Listener_config" path="${http.listner.path}"/>
+		<logger level="INFO" doc:name="Logger" doc:id="682f06c1-6259-46af-950e-4f777d115895" message="Request received to firstcoach"/>
+		<set-variable value="#[attributes.uriParams.serviceType]" doc:name="Set Variable" doc:id="9b6309c2-1c4f-41b8-8a18-7860f98d6f01" variableName="serviceType"/>
+		<choice doc:name="Choice" doc:id="6de45f6b-8d72-464d-86af-ac2b86d0f729" >
+			<when expression='#[vars.serviceType == "routes"]'>
+				<logger level="INFO" doc:name="Logger" doc:id="a8080d57-214c-46fc-bd2e-4f4ab36cd58b" message="firstCoach routes flow called"/>
+				<flow-ref doc:name="Flow Reference" doc:id="8194b732-ff61-42b0-8157-43e08bd31094" name="firstCoach-getRoutes-implementationFlow"/>
+			</when>
+			<when expression='#[vars.serviceType == "schedules"]'>
+				<logger level="INFO" doc:name="Logger" doc:id="539edc72-617f-4fe5-b4da-37225a764de6" message="first coach schedule flow called"/>
+				<flow-ref doc:name="Flow Reference" doc:id="42a2cb9d-2534-487d-b15b-330ca42794df" name="firstCoach-getSchedule-implementationFlow"/>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Logger" doc:id="3bd5e21c-a737-4f68-a476-7c7b87c215ad" />
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="Logger" doc:id="b0abae55-cff8-4ba3-99c7-63fbf2a668d6" message="Response sent to firstcoach"/>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="b9f2f926-acb2-4b4c-a406-f660f0e67845" >
+				<logger level="INFO" doc:name="Logger" doc:id="27beca3e-5045-443b-bb0b-0b626102882a" message="Error occured to firstcoach"/>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+</mule>
