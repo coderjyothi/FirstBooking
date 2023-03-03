@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:request-config name="HTTP_Request_configuration1" doc:name="HTTP Request configuration" doc:id="841dda19-ff8d-47f0-a435-936a16b043bb" >
+		<http:request-connection host="localhost" port="9084" />
+	</http:request-config>
+	<sub-flow name="getSchedulesSub_Flow" doc:id="8e871654-044f-434a-b071-16abc052de81" >
+		<http:request method="GET" doc:name="Request" doc:id="50ce3d87-7f12-4c03-ab8b-3b51c688ec04" config-ref="HTTP_Request_configuration1" path="/api/booking/bus/schedules">
+			<http:query-params ><![CDATA[#[output application/java
+---
+{
+	companyCode : attributes.queryParams.companyCode
+}]]]></http:query-params>
+		</http:request>
+		<ee:transform doc:name="Transform Message" doc:id="caa4e413-b935-45cd-890d-e9a91fcc92a3" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+</mule>
