@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="e784e0d9-5586-4132-950c-c1b320cde9ad" responseTimeout="60000">
+		<http:request-connection host="localhost" port="9085" />
+	</http:request-config>
+	<http:request-config name="HTTP_Request_configuration1" doc:name="HTTP Request configuration" doc:id="11a3ded7-8b88-4ce6-9154-eebda45675b7" responseTimeout="60000">
+		<http:request-connection host="localhost" port="9083" />
+	</http:request-config>
+	<os:object-store name="Object_store" doc:name="Object store" doc:id="5962b5c9-7549-40d1-a87c-42372cd64f21" maxEntries="1000" entryTtl="1" entryTtlUnit="MINUTES"/>
+	<ee:object-store-caching-strategy name="Caching_Strategy" doc:name="Caching Strategy" doc:id="55816e37-7180-49d9-8c1f-ba5d26e8b15a" keyGenerationExpression='#[vars.transportCompany ++ vars.transportType ++ "Routes"]' objectStore="Object_store" />
+	<ee:object-store-caching-strategy name="Caching_Strategy1" doc:name="Caching Strategy" doc:id="6dfd52e0-f3fa-44f5-bc09-c8624ef5f44b" keyGenerationExpression='#[vars.transportCompany ++ vars.transportType ++ "Routes"]' objectStore="Object_store" />
+	<sub-flow name="getRoutes-FirstCoach" doc:id="162f6500-7eec-4625-b1ef-94c234de8da5" >
+		<logger level="INFO" doc:name="Logger" doc:id="3607d506-f5ab-4526-9cb7-0f62000ad234" />
+		<ee:cache doc:name="Cache" doc:id="cd3e2cb7-4458-4cba-8521-4e44ae065055" cachingStrategy-ref="Caching_Strategy">
+			<http:request method="GET" doc:name="Request" doc:id="20f8b8d1-10b9-405d-90af-2ce450557169" config-ref="HTTP_Request_configuration1" path="/api/bus/firstCoach/routes" />
+			<ee:transform doc:name="Transform Message" doc:id="7d365ce9-bb8e-49cf-9925-404f97ca37df">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+flatten(payload map(value,index)->
+[
+  {
+    "companyCode": "FirstCoach",
+    "originLocation": {
+      "locationCode": value.originLocation.locationCode,
+      "locationDesc": "Beauna Vista Singapore"
+    },
+    "destinationLocation": {
+      "locationCode": value.destinationLocation.locationCode,
+      "locationDesc": "Klang Malaysia"
+    }
+  }
+])]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			<logger level="INFO" doc:name="Logger" doc:id="9155575e-c4e4-4839-9a4c-46cf1076040e" message="Logger inside Cache"/>
+		</ee:cache>
+	</sub-flow>
+	<flow name="getRoutesFlow" doc:id="c068d4e0-6092-4d0d-a4d1-56ba22610a97" >
+		<choice doc:name="Choice" doc:id="568ea72d-aa3f-4bf3-995b-b248d72ecddb" >
+			<when expression='#[vars.transportCompany == "firstCoach"]'>
+				<logger level="INFO" doc:name="Logger" doc:id="93f7fb03-d44c-42a2-98ab-8d960f9de798" />
+				<flow-ref doc:name="getRoutes-FirstCoach" doc:id="ecba809d-9478-4546-8624-ba875ee0fe05" name="getRoutes-FirstCoach"/>
+			</when>
+			<when expression="#[vars.transportCompany == 'transNational']">
+				<logger level="INFO" doc:name="Logger" doc:id="f4ff6c58-7c24-4d64-8fd3-7398382667cc" />
+				<flow-ref doc:name="getRoutes-tranNational" doc:id="914fa3a8-8b93-4e6c-accf-23daf7176e7f" name="getRoutes-tranNational"/>
+			</when>
+			<when expression='#[isEmpty(vars.transportCompany)]'>
+				<logger level="INFO" doc:name="Logger" doc:id="a4476a28-22aa-4e52-a34f-d53892e9531d" />
+				<scatter-gather doc:name="Scatter-Gather" doc:id="7ce94665-c88d-4243-a20b-f4680dc4239a">
+					<route>
+						<set-variable value='#["firstCoach"]' doc:name="Set Variable" doc:id="9a5df18b-86bd-4e30-b4c1-c96fafbc1023" variableName="transportCompany"/>
+						<flow-ref doc:name="getRoutes-firstCoach" doc:id="b971ee2b-f409-49d5-84ee-5d09fb8ae567" name="getRoutes-FirstCoach" />
+					</route>
+					<route>
+						<set-variable value='#["transNational"]' doc:name="Set Variable" doc:id="e9e5ff72-f022-46c3-8756-fa3216110be2" variableName="transportCompany"/>
+						<flow-ref doc:name="getRoutes-transNational" doc:id="cb425df8-8812-4262-92fb-737c30d4ce2a" name="getRoutes-tranNational" />
+					</route>
+				</scatter-gather>
+				<ee:transform doc:name="Transform Message" doc:id="cb6c16c0-04aa-4155-8800-898cb60f9256">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+[payload[0].payload ++ payload[1].payload reduce ($ ++ $$)]]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Logger" doc:id="33a43569-9b5d-4fa1-98c0-b916a817a334" />
+				<set-payload value="{}" doc:name="Set Payload" doc:id="6bf3c7a6-7ee4-4196-a924-7059e431cc4f" />
+			</otherwise>
+		</choice>
+	</flow>
+	<sub-flow name="getRoutes-tranNational" doc:id="c00e82cc-35a5-45e5-b191-e4613b1c3e95" >
+		<logger level="INFO" doc:name="Logger" doc:id="8078d338-4b83-494e-aeb8-9b8b36afb0e8" />
+		<ee:cache doc:name="Cache" doc:id="44c96e9a-658b-4acd-a10d-4acf5e88408b" cachingStrategy-ref="Caching_Strategy1">
+			<http:request method="GET" doc:name="Request" doc:id="3361bec9-4758-489a-9f92-ae470d302aa9" config-ref="HTTP_Request_configuration" path="/api/bus/transnational/routes" />
+			<ee:transform doc:name="Transform Message" doc:id="58e476f5-24e5-4e5f-8309-ce3841a91e92">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+flatten(payload map(value,index)->
+[
+  {
+    "companyCode": "TransNational",
+    "originLocation": {
+      "locationCode": value.originLocation.locationCode,
+      "locationDesc": "Beauna Vista Singapore"
+    },
+    "destinationLocation": {
+      "locationCode": value.destinationLocation.locationCode,
+      "locationDesc": "Klang Malaysia"
+    }
+  }
+])]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			<logger level="INFO" doc:name="Logger" doc:id="320c2f02-e5f0-4146-86b7-daa86fedf7bf" message="logger inside transNational Cache"/>
+		</ee:cache>
+	</sub-flow>
+</mule>

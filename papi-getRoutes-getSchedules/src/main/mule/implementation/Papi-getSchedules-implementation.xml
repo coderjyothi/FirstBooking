@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:request-config name="HTTP_Request_configuration2" doc:name="HTTP Request configuration" doc:id="916edaf7-20eb-4b08-b201-fe8d9323d4e3" responseTimeout="60000">
+		<http:request-connection host="localhost" port="9083" />
+	</http:request-config>
+	<sub-flow name="getSchedules-firstCoach" doc:id="72300d26-70b0-4660-8cde-71257e945521" >
+		<http:request method="GET" doc:name="Request" doc:id="4b2e4755-3562-4605-af77-0e5b1ef39ae9" config-ref="HTTP_Request_configuration2" path="/api/bus/firstCoach/schedules">
+			<http:uri-params ><![CDATA[#[output application/java
+---
+{
+	"Key" : "Value"
+}]]]></http:uri-params>
+		</http:request>
+		<ee:transform doc:name="Transform Message" doc:id="53b7397f-3a81-489a-a2ad-b1b324eb28a5" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "departureSchedules": payload.departureSchedules map(value,index)-> 
+    {
+      "availableSeats": value.availableSeats,
+      "departureDateTime": value.departureDateTime,
+      "travelRoute": {
+        "destinationLocation": {
+          "locationCode": "my-klg",
+          "locationDesc": "Klang Malaysia"
+        },
+        "originLocation": {
+          "locationCode": "my-klg",
+          "locationDesc": "Beauna Vista Singapore"
+        }
+      }
+    }
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="Papi-getSchedules-mainflow" doc:id="9524f5f2-05e1-48f5-80fe-acb160f3dbce" >
+		<choice doc:name="Choice" doc:id="c530f70d-9d4d-4425-b421-65fbb7690b6b" >
+			<when expression='#[vars.transportCompany == "firstCoach"]'>
+				<flow-ref doc:name='getSchedules-firstCoach' doc:id="53e58349-503f-4791-9a67-ccb34cdec75c" name="getSchedules-firstCoach"/>
+			</when>
+			<when expression="#[isEmpty(vars.transportCompany)]">
+				<logger level="INFO" doc:name="Logger" doc:id="2c35efb9-d516-4b01-b5cb-2e260c7074eb" />
+				<set-variable value='#["firstCoach"]' doc:name="Set Variable" doc:id="860eb8cc-2428-48bb-b4ce-857d8efa3a63" variableName="transportCompany" />
+				<flow-ref doc:name="getSchedules-firstCoach" doc:id="10b8f6b3-b445-4732-a05e-b152b6e37e96" name="getSchedules-firstCoach"/>
+			</when>
+			<when expression='#[vars.transportCompany == "transNational"]'>
+				<set-payload value="{}" doc:name="Set Payload" doc:id="a7f6aeb3-ffa1-4345-baa3-e076ae2cfe53" />
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Transform Message" doc:id="885b22e0-c914-4b3b-8aab-329a5381f75f" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+	</sub-flow>
+</mule>

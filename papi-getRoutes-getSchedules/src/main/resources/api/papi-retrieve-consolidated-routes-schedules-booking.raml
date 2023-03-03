@@ -1,0 +1,79 @@
+#%RAML 1.0
+title: Retrieve Consolidated Routes & Schedules
+description: This RAML file is about Retrieve Routes & Schedules PAPI
+uses:
+  common: /Libraries/common/commonbusinesslibrary.raml
+
+types:
+  getRoutesResponse: !include /Libraries/routes/dataTypes/getRoutes-200Response-dataType.raml
+  getScheduleResponse: !include /Libraries/schedules/dataTypes/getSchedules-200Response-dataType.raml
+  commonError: !include /Libraries/common/dataTypes/Error-common-dataType.raml
+  bookingResponse: !include Libraries/bookings/dataType/booking-200Response-dataType.raml
+/booking:
+  /{transportType}:
+    /routes:
+      get:
+        is:
+          - common.companyName
+          - common.departureLocation
+        responses:
+              200:
+                body:
+                  application/json:
+                    type: getRoutesResponse  
+                    example: !include Libraries/routes/examples/getRoutes-200response-example.json                     
+              400:
+                body:
+                  application/json:
+                    type: commonError
+                    example: !include /Libraries/common/examples/400Response-example.json                             
+              404:
+                body:
+                  application/json:
+                    type: commonError
+                    example: !include /Libraries/common/examples/404Response-example.json
+              500:
+                body:
+                  application/json:
+                    type: commonError
+                    example: !include /Libraries/common/examples/500Response-example.json
+    /schedules:
+      get:
+        is:
+          - common.companyName
+          - common.departureLocation
+          - common.destinationLocation
+          - common.requestTimeZone    
+        responses:
+              200:
+                body:
+                  application/json:
+                    type: getScheduleResponse
+                    example: !include /Libraries/schedules/examples/getSchedules-200response-example.json                    
+              400:
+                body:
+                  application/json:
+                    type: commonError
+                    example: !include /Libraries/common/examples/400Response-example.json               
+              404:
+                body:
+                  application/json:
+                    type: commonError
+                    example: !include /Libraries/common/examples/404Response-example.json
+              500:
+                body:
+                  application/json:
+                    type: commonError
+                    example: !include /Libraries/common/examples/500Response-example.json
+    /{transportCompany}:
+      post:
+        is:
+          - common.departureLocation
+          - common.destinationLocation   
+        responses:
+          200:
+            body:
+              application/json:
+                type: bookingResponse
+                example: !include Libraries/bookings/example/getRoutes-200Response-example.json
+                  

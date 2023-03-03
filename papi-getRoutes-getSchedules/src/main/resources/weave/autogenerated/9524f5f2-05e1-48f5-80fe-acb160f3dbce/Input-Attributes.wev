@@ -1,0 +1,28 @@
+%dw 2.0
+
+type auto_9524f5f2_05e1_48f5_80fe_acb160f3dbce_Input_Attributes = {|
+  clientCertificate?: {|
+    publicKey?: {|  |}, 
+    "type"?: String, 
+    encoded?: Binary
+  |}, 
+  headers: {|  |}, 
+  listenerPath: String, 
+  method: String, 
+  queryParams: {|
+    companyCode?: String, 
+    departureLocationCode?: String, 
+    destinationLocationCode?: String, 
+    requestTimezone?: Number
+  |}, 
+  queryString: String, 
+  relativePath: String, 
+  remoteAddress: String, 
+  requestPath: String, 
+  requestUri: String, 
+  scheme: String, 
+  uriParams: {| transportType: String |}, 
+  version: String, 
+  localAddress: String
+|}
+

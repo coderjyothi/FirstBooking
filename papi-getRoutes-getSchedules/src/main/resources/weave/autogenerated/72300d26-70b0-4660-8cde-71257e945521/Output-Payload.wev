@@ -1,0 +1,4 @@
+%dw 2.0
+
+type auto_72300d26_70b0_4660_8cde_71257e945521_Output_Payload = {| departureSchedules: Any |}
+
