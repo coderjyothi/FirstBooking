@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="15b7687f-6662-4b9e-949f-47a67a8f8841" responseTimeout="60000">
+		<http:request-connection host="localhost" port="9082" />
+	</http:request-config>
+	<sub-flow name="firstCoach-getRoutes-implementationSub_Flow" doc:id="2dcd26c3-3d37-432c-b34e-233c0e772974" >
+		<http:request method="GET" doc:name="Request" doc:id="ef78d797-2ecd-426b-90d5-96d5e4fe903c" config-ref="HTTP_Request_configuration" path="/firstCoach/routes"/>
+		<ee:transform doc:name="Transform Message" doc:id="928b7cb8-7bff-421c-aab6-db21d5a33ed0" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map(value,index)->{
+    "originLocation": { 
+        "locationCode": value.departureLocationCode 
+    }, 
+    "destinationLocation": { 
+        "locationCode": value.arrivalLocationCode
+    }
+}
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+</mule>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:request-config name="HTTP_Request_configuration1" doc:name="HTTP Request configuration" doc:id="e580eb85-0bbf-4a83-850f-cd1b5369b092" responseTimeout="60000">
+		<http:request-connection host="localhost" port="9082" />
+	</http:request-config>
+	<sub-flow name="firstCoach-getSchedule-implementationSub_Flow" doc:id="ae92a8c2-d8cc-46b6-8fd7-e1af1b6a6b22" >
+		<http:request method="GET" doc:name="Request" doc:id="5d8e3eee-c19a-4302-9061-14bdc4f50a45" config-ref="HTTP_Request_configuration1" path="/firstCoach/schedules"/>
+		<ee:transform doc:name="Transform Message" doc:id="f767d7ce-c40b-411e-b52d-c6da3afb655a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "departureSchedules": payload.schedules map(value,index)->
+    {
+      "availableSeats": value.availableSeats,
+      "departureDateTime": value.departureDateTime,
+      "travelRoute": {
+        "destinationLocation": {
+          "locationCode": value.toLocation
+        },
+        "originLocation": {
+          "locationCode": value.fromLocation
+        }
+      }
+    }
+  
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+</mule>

@@ -1,0 +1,34 @@
+#%RAML 1.0
+title: SAPIRetrieveTransNationalRoutes
+description: This RAML is about Retrieve TransNational Routes SAPI
+
+types:
+  getRoutesResponse: !include /Libraries/routes/dataTypes/getRoutes-200Response-dataType.raml
+  commonError: !include /Libraries/common/dataTypes/Error-common-dataType.raml
+
+/{transportType}:
+  /{transportCompany}:
+    /routes:
+      get:
+        responses:
+          200:
+            body:
+              application/json:
+                type: getRoutesResponse
+                example: !include /Libraries/routes/examples/getRoutes-200Response-example.json
+          400:
+            body:
+              application/json:
+                type: commonError
+                example: !include /Libraries/common/examples/400Response-example.json                             
+          404:
+            body:
+              application/json:
+                type: commonError
+                example: !include /Libraries/common/examples/404Response-example.json
+          500:
+            body:
+              application/json:
+                type: commonError
+                example: !include /Libraries/common/examples/500Response-example.json       
+    

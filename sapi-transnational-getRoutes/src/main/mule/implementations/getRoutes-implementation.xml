@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="6af50d67-c01d-4f2e-a594-4dd3a507fa5f" responseTimeout="60000">
+		<http:request-connection host="localhost" port="9081" />
+	</http:request-config>
+	<sub-flow name="getRoutes-implementationSub_Flow" doc:id="511b8d8c-ba55-4405-a346-896299e561e2" >
+		<set-variable value="#['&lt;soapenv:Envelope xmlns:soapenv=&quot;http://schemas.xmlsoap.org/soap/envelope/&quot; &#10;xmlns:book=&quot;http://www.example.org/Bookings/&quot;&gt; &#10;   &lt;soapenv:Header/&gt; &#10;   &lt;soapenv:Body&gt; &#10;      &lt;book:getRoutes&gt; &#10;         &lt;in&gt;&lt;/in&gt; &#10;      &lt;/book:getRoutes&gt; &#10;   &lt;/soapenv:Body&gt; &#10;&lt;/soapenv:Envelope&gt;']" doc:name="Set Variable" doc:id="b0d18ca6-8694-4f44-a276-cd86631fa607" variableName="soapInput"/>
+		<ee:transform doc:name="Transform Message" doc:id="1fd897af-661b-4c26-b4fe-c68b9278b8a3" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+---
+read( vars.soapInput ,'application/xml')]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<http:request method="POST" doc:name="Request" doc:id="8cd27fd1-c4f1-4342-b226-f574ed7be0fe" config-ref="HTTP_Request_configuration" path="/Bookings/BookingsSOAP"/>
+		<ee:transform doc:name="Transform Message" doc:id="c8179d55-0b1d-427d-9c58-27c83dae0f30" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload.Envelope.Body.Envelope.Body.getRoutesResponse.out]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="Transform Message" doc:id="0f5717e7-8a7e-4579-8f84-609280dcf5a7" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+[
+  {
+    "originLocation": {
+      "locationCode": payload.ROUTELIST.ROUTEINFO.ORIGIN
+    },
+    "destinationLocation": {
+      "locationCode": payload.ROUTELIST.ROUTEINFO.DESTINATION
+    }
+  }
+]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="b438a1e0-b801-413c-a34c-4c1e5072333d" message="#[payload.Envelope.Body.Envelope.Body.getRoutesResponse.out]"/>
+	</sub-flow>
+</mule>

@@ -1,0 +1,9 @@
+http: 
+  listner:
+   host: "localhost"
+   port: "9083" 
+  request:
+   host: "localhost"
+   port: "9082"
+   routesPath: "/firstCoach/routes"
+   schedulesPath: "/firstCoach/schedules"
